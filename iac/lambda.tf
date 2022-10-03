@@ -17,7 +17,10 @@ resource "aws_iam_role" "s3_read_write" {
 }
 EOF
 
-    managed_policy_arns = [aws_iam_policy.s3_read_write.arn]
+    managed_policy_arns = [
+      aws_iam_policy.s3_read_write.arn,
+      "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ]
 }
 
 resource "aws_iam_policy" "s3_read_write" {
@@ -55,4 +58,12 @@ resource "aws_lambda_function" "img_zipping" {
       Environment = "dev"
     }
   }
+}
+
+resource "aws_lambda_permission" "allow_bucket" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.img_zipping.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.images.arn
 }
